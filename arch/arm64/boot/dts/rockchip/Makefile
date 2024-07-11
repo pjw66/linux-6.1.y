@@ -83,6 +83,7 @@ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-zcube1-max.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-zysj.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-anbernic-rg353p.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-anbernic-rg503.dtb
+dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-hejiaqin.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-jp-tvbox.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-panther-x2.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-pinenote-v1.1.dtb
