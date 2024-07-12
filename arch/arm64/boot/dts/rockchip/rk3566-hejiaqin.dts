@@ -12,8 +12,8 @@
 #include "rk3566.dtsi"
 
 / {
-	model = "JP TVbox 3566";
-	compatible = "JP-TVbox,rk3566", "rockchip,rk3566";
+	model = "RK3566 HeJiaQing";
+	compatible = "rockchip,rk3566";
 
 	aliases {
 		ethernet0 = &gmac1;
