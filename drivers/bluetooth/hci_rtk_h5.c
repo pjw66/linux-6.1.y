@@ -640,7 +640,7 @@ static void h5_complete_rx_pkt(struct hci_uart *hu)
 						       h5->rx_skb->len);
 #endif
 
-#if HCI_VERSION_CODE < KERNEL_VERSION(3, 13, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 13, 0)
 		hci_recv_frame(h5->rx_skb);
 #else
 		hci_recv_frame(hu->hdev, h5->rx_skb);
@@ -657,7 +657,7 @@ static u16 bscp_get_crc(struct h5_struct *h5) {
 }
 
 /* Recv data */
-static int h5_recv(struct hci_uart *hu, void *data, int count)
+static int h5_recv(struct hci_uart *hu, const void *data, int count)
 {
 	struct h5_struct *h5 = hu->priv;
 	register unsigned char *ptr;
