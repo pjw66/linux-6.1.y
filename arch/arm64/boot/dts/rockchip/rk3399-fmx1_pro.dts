@@ -4,6 +4,7 @@
 #include <dt-bindings/input/linux-event-codes.h>
 #include <dt-bindings/leds/common.h>
 #include <dt-bindings/pwm/pwm.h>
+#include <dt-bindings/pinctrl/rockchip.h>
 #include "rk3399.dtsi"
 #include "rk3399-opp.dtsi"
 
@@ -139,6 +140,13 @@
 		};
 	};
 
+	xin32k: xin32k {
+		compatible = "fixed-clock";
+		clock-frequency = <32768>;
+		clock-output-names = "xin32k";
+		#clock-cells = <0>;
+	};
+
     clkin_gmac: external-gmac-clock {
 		compatible = "fixed-clock";
 		clock-frequency = <125000000>;
@@ -254,12 +262,6 @@
 		#sound-dai-cells = <0>;
 	};
 
-    dw_hdmi_audio: dw-hdmi-audio {
-		status = "okay";
-		compatible = "rockchip,dw-hdmi-audio";
-		#sound-dai-cells = <0x00>;
-	};
-
     sdio_pwrseq: sdio-pwrseq {
 		compatible = "mmc-pwrseq-simple";
 		clocks = <&rk808 1>;
@@ -279,7 +281,7 @@
 	};
 
 	wireless_bluetooth: wireless-bluetooth {
-		compatible = "brcm,bcm43438-bt";
+		compatible = "bluetooth-platdata";
 		clocks = <&rk808 1>;
 		clock-names = "ext_clock";
 		uart_rts_gpios = <&gpio2 RK_PC3 GPIO_ACTIVE_LOW>;
@@ -332,50 +334,46 @@
 };
 
 &sdio0 {
-	status = "okay";
-	#address-cells = <1>;
-	#size-cells = <0>;
-	bus-width = <4>;
 	clock-frequency = <100000000>;
+	clock-freq-min-max = <200000 100000000>;
+	supports-sdio;
+	bus-width = <4>;
 	disable-wp;
 	cap-sd-highspeed;
 	cap-sdio-irq;
 	keep-power-in-suspend;
-    supports-sdio;
 	mmc-pwrseq = <&sdio_pwrseq>;
 	non-removable;
+	num-slots = <1>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdio0_bus4 &sdio0_cmd &sdio0_clk>;
 	sd-uhs-sdr104;
+	status = "okay";
 };
 
 &sdmmc {
-	status = "okay";
+	clock-frequency = <100000000>;
+	clock-freq-min-max = <100000 100000000>;
+	supports-sd;
 	bus-width = <4>;
-    supports-sd;
 	cap-mmc-highspeed;
 	cap-sd-highspeed;
 	disable-wp;
-    sd-uhs-sdr104;
-	max-frequency = <150000000>;
-    vqmmc-supply = <&vcc_sdio>;
+	num-slots = <1>;
+	//sd-uhs-sdr104;
+	vqmmc-supply = <&vcc_sdio>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdmmc_clk &sdmmc_cmd &sdmmc_cd &sdmmc_bus4>;
+	card-detect-delay = <800>;
+	status = "okay";
 };
 
 &sdhci {
 	bus-width = <8>;
 	mmc-hs400-1_8v;
-	mmc-hs400-enhanced-strobe;
+	supports-emmc;
 	non-removable;
-    supports-emmc;
-	status = "okay";
-};
-
-&hdmi {
-	ddc-i2c-bus = <&i2c3>;
-	pinctrl-names = "default";
-	pinctrl-0 = <&hdmi_cec>;
+	mmc-hs400-enhanced-strobe;
 	status = "okay";
 };
 
@@ -384,20 +382,20 @@
 };
 
 &gmac {
-	status = "okay";
-	assigned-clocks = <&cru SCLK_RMII_SRC>;
-	assigned-clock-parents = <&clkin_gmac>;
-	clock_in_out = "input";
 	phy-supply = <&vcc_phy_regulator>;
 	phy-mode = "rgmii";
-	pinctrl-names = "default";
-	pinctrl-0 = <&rgmii_pins>;
-	pinctrl-1 = <&rgmii_sleep_pins>;
-	snps,reset-gpio = <&gpio3 RK_PB7 GPIO_ACTIVE_LOW>; // sch
+	clock_in_out = "input";
+	snps,reset-gpio = <&gpio3 15 GPIO_ACTIVE_LOW>;
 	snps,reset-active-low;
 	snps,reset-delays-us = <0 10000 50000>;
+	assigned-clocks = <&cru SCLK_RMII_SRC>;
+	assigned-clock-parents = <&clkin_gmac>;
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&rgmii_pins>;
+	pinctrl-1 = <&rgmii_sleep_pins>;
 	tx_delay = <0x28>;
 	rx_delay = <0x11>;
+	status = "okay";
 };
 
 &io_domains {
@@ -432,6 +430,12 @@
 };
 
 &usbdrd3_0 {
+	extcon = <&fusb0>;
+	status = "okay";
+};
+
+&usbdrd_dwc3_0 {
+	dr_mode = "otg";
 	status = "okay";
 };
 
@@ -439,10 +443,6 @@
 	status = "okay";
 };
 
-&usbdrd_dwc3_0 {
-	status = "okay";
-	dr_mode = "host";
-};
 
 &usbdrd_dwc3_1 {
 	status = "okay";
@@ -450,11 +450,12 @@
 };
 
 &tsadc {
-	status = "okay";
 	/* tshut mode 0:CRU 1:GPIO */
 	rockchip,hw-tshut-mode = <1>;
 	/* tshut polarity 0:LOW 1:HIGH */
 	rockchip,hw-tshut-polarity = <1>;
+	rockchip,hw-tshut-temp = <120000>;
+	status = "okay";
 };
 
 &i2c0 {
@@ -689,13 +690,9 @@
 	};
 };
 
-&i2c3 {
-    status = "okay";
-};
-
 &i2c4 {
     status = "okay";
-    fusb30x@22 {
+    fusb0: fusb30x@22 {
 		compatible = "fairchild,fusb302";
 		reg = <0x22>;
 		pinctrl-names = "default";
@@ -706,24 +703,157 @@
 	};
 };
 
-&pwm0 {
+&cdn_dp {
+	status = "okay";
+	extcon = <&fusb0>;
+};
+
+&hdmi_in_vopl {
 	status = "disabled";
 };
 
-&pwm1 {
+&dp_in_vopb {
 	status = "disabled";
 };
+
+// &route_hdmi {
+// 	status = "okay";
+// };
+
+&hdmi {
+	pinctrl-names = "default";
+	pinctrl-0 = <&hdmi_i2c_xfer>, <&hdmi_cec>;
+};
+
+&hdmi {
+	status = "okay";
+	rockchip,phy-table =
+		<74250000 0x8009 0x0004 0x0272>,
+		<165000000 0x802b 0x0004 0x0209>,
+		<297000000 0x8039 0x0005 0x028d>,
+		<594000000 0x8039 0x0000 0x019d>,
+		<000000000 0x0000 0x0000 0x0000>;
+};
+
+// &hdmi_dp_sound {
+// 	status = "okay";
+// };
 
 &pwm2 {
 	status = "okay";
+	pinctrl-names = "active";
+	pinctrl-0 = <&pwm2_pin_pull_down>;
 };
 
 &pwm3 {
 	status = "okay";
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&pwm3a_pin>;
+	interrupts = <GIC_SPI 61 IRQ_TYPE_LEVEL_HIGH 0>;
+	compatible = "rockchip,remotectl-pwm";
+	remote_pwm_id = <3>;
+	handle_cpu_id = <1>;
+	remote_support_psci = <1>;
+
+	ir_key1 {
+		rockchip,usercode = <0x4040>;
+		rockchip,key_table =
+			<0xf2	KEY_REPLY>,
+			<0xba	KEY_BACK>,
+			<0xf4	KEY_UP>,
+			<0xf1	KEY_DOWN>,
+			<0xef	KEY_LEFT>,
+			<0xee	KEY_RIGHT>,
+			<0xbd	KEY_HOME>,
+			<0xea	KEY_VOLUMEUP>,
+			<0xe3	KEY_VOLUMEDOWN>,
+			<0xe2	KEY_SEARCH>,
+			<0xb2	KEY_POWER>,
+			<0xbc	KEY_MUTE>,
+			<0xec	KEY_MENU>,
+			<0xbf	0x190>,
+			<0xe0	0x191>,
+			<0xe1	0x192>,
+			<0xe9	183>,
+			<0xe6	248>,
+			<0xe8	185>,
+			<0xe7	186>,
+			<0xf0	388>,
+			<0xbe	0x175>;
+	};
+
+	ir_key2 {
+		rockchip,usercode = <0xff00>;
+		rockchip,key_table =
+			<0xf9	KEY_HOME>,
+			<0xbf	KEY_BACK>,
+			<0xfb	KEY_MENU>,
+			<0xaa	KEY_REPLY>,
+			<0xb9	KEY_UP>,
+			<0xe9	KEY_DOWN>,
+			<0xb8	KEY_LEFT>,
+			<0xea	KEY_RIGHT>,
+			<0xeb	KEY_VOLUMEDOWN>,
+			<0xef	KEY_VOLUMEUP>,
+			<0xf7	KEY_MUTE>,
+			<0xe7	KEY_POWER>,
+			<0xfc	KEY_POWER>,
+			<0xa9	KEY_VOLUMEDOWN>,
+			<0xa8	KEY_VOLUMEDOWN>,
+			<0xe0	KEY_VOLUMEDOWN>,
+			<0xa5	KEY_VOLUMEDOWN>,
+			<0xab	183>,
+			<0xb7	388>,
+			<0xe8	388>,
+			<0xf8	184>,
+			<0xaf	185>,
+			<0xed	KEY_VOLUMEDOWN>,
+			<0xee	186>,
+			<0xb3	KEY_VOLUMEDOWN>,
+			<0xf1	KEY_VOLUMEDOWN>,
+			<0xf2	KEY_VOLUMEDOWN>,
+			<0xf3	KEY_SEARCH>,
+			<0xb4	KEY_VOLUMEDOWN>,
+			<0xbe	KEY_SEARCH>;
+	};
+
+	ir_key3 {
+		rockchip,usercode = <0x1dcc>;
+		rockchip,key_table =
+			<0xee	KEY_REPLY>,
+			<0xf0	KEY_BACK>,
+			<0xf8	KEY_UP>,
+			<0xbb	KEY_DOWN>,
+			<0xef	KEY_LEFT>,
+			<0xed	KEY_RIGHT>,
+			<0xfc	KEY_HOME>,
+			<0xf1	KEY_VOLUMEUP>,
+			<0xfd	KEY_VOLUMEDOWN>,
+			<0xb7	KEY_SEARCH>,
+			<0xff	KEY_POWER>,
+			<0xf3	KEY_MUTE>,
+			<0xbf	KEY_MENU>,
+			<0xf9	0x191>,
+			<0xf5	0x192>,
+			<0xb3	388>,
+			<0xbe	KEY_1>,
+			<0xba	KEY_2>,
+			<0xb2	KEY_3>,
+			<0xbd	KEY_4>,
+			<0xf9	KEY_5>,
+			<0xb1	KEY_6>,
+			<0xfc	KEY_7>,
+			<0xf8	KEY_8>,
+			<0xb0	KEY_9>,
+			<0xb6	KEY_0>,
+			<0xb5	KEY_BACKSPACE>;
+	};
 };
 
 &u2phy0 {
 	status = "okay";
+	extcon = <&fusb0>;
 
 	u2phy0_host: host-port {
 		status = "okay";
@@ -749,6 +879,7 @@
 };
 
 &tcphy0 {
+	extcon = <&fusb0>;
 	status = "okay";
 };
 
@@ -757,11 +888,17 @@
 };
 
 &spdif {
+	pinctrl-0 = <&spdif_bus_1>;
 	status = "okay";
+	#sound-dai-cells = <0>;
 };
 
 &i2s0 {
 	status = "okay";
+	rockchip,i2s-broken-burst-len;
+	rockchip,playback-channels = <8>;
+	rockchip,capture-channels = <8>;
+	#sound-dai-cells = <0>;
 };
 
 &i2s1 {
@@ -769,6 +906,7 @@
 };
 
 &i2s2 {
+	#sound-dai-cells = <0>;
 	status = "okay";
 };
 
@@ -790,6 +928,54 @@
 };
 
 &pinctrl {
+	sdio0 {
+		sdio0-bus1 {
+			rockchip,pins = <2 20 1 &pcfg_pull_up_20ma>;
+		};
+
+		sdio0-bus4 {
+			rockchip,pins =
+				<2 20 1 &pcfg_pull_up_20ma>,
+				<2 21 1 &pcfg_pull_up_20ma>,
+				<2 22 1 &pcfg_pull_up_20ma>,
+				<2 23 1 &pcfg_pull_up_20ma>;
+		};
+
+		sdio0-cmd {
+			rockchip,pins = <2 24 1 &pcfg_pull_up_20ma>;
+		};
+
+		sdio0-clk {
+			rockchip,pins = <2 25 1 &pcfg_pull_up_20ma>;
+		};
+		
+	};
+
+	sdmmc {
+		sdmmc_bus1: sdmmc-bus1 {
+			rockchip,pins =
+				<4 8 1 &pcfg_pull_up_8ma>;
+		};
+
+		sdmmc_bus4: sdmmc-bus4 {
+			rockchip,pins =
+				<4 8 1 &pcfg_pull_up_8ma>,
+				<4 9 1 &pcfg_pull_up_8ma>,
+				<4 10 1 &pcfg_pull_up_8ma>,
+				<4 11 1 &pcfg_pull_up_8ma>;
+		};
+
+		sdmmc_clk: sdmmc-clk {
+			rockchip,pins =
+				<4 12 1 &pcfg_pull_none_18ma>;
+		};
+
+		sdmmc_cmd: sdmmc-cmd {
+			rockchip,pins =
+				<4 13 1 &pcfg_pull_up_8ma>;
+		};
+	};
+
 	leds {
 		sys_led_pin: sys-led-pin {
 			rockchip,pins = <1 RK_PB0 RK_FUNC_GPIO &pcfg_pull_none>; // sch
@@ -842,6 +1028,8 @@
 };
 
 &vopb {
+	assigned-clocks = <&cru DCLK_VOP0_DIV>;
+	assigned-clock-parents = <&cru PLL_VPLL>;
 	status = "okay";
 };
 
@@ -850,6 +1038,8 @@
 };
 
 &vopl {
+	assigned-clocks = <&cru DCLK_VOP1_DIV>;
+	assigned-clock-parents = <&cru PLL_CPLL>;
 	status = "okay";
 };
 
