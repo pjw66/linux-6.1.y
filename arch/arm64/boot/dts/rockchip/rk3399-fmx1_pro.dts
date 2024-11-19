@@ -140,6 +140,19 @@
 		vin-supply = <&vcc5v0_sys>;
 	};
 
+	vcc3v3_sd: vcc-sd {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		regulator-always-on;
+		regulator-boot-on;
+		gpio = <&gpio0 RK_PA1 GPIO_ACTIVE_HIGH>; // sch
+		pinctrl-names = "default";
+		pinctrl-0 = <&vcc_sd_h>;
+		regulator-name = "vcc3v3_sd";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+
 	vcc3v3_lan: vcc3v3-lan-regulator {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc3v3_lan";
@@ -322,10 +335,6 @@
 &sdhci {
 	bus-width = <8>;
 	non-removable;
-	status = "okay";
-};
-
-&hdmi_sound {
 	status = "okay";
 };
 
@@ -696,6 +705,10 @@
 	status = "okay";
 };
 
+&hdmi_sound {
+	status = "okay";
+};
+
 // &hdmi_dp_sound {
 // 	status = "okay";
 // };
@@ -759,6 +772,8 @@
 // };
 
 &i2s2 {
+	rockchip,playback-channels = <2>;
+	rockchip,capture-channels = <2>;
 	#sound-dai-cells = <0>;
 	status = "okay";
 };
@@ -860,6 +875,12 @@
 		vcc5v0_typec_en: vcc5v0-typec-en {
 			rockchip,pins =
 				<1 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
+
+	vcc_sd {
+		vcc_sd_h: vcc-sd-h {
+			rockchip,pins = <0 RK_PA1 RK_FUNC_GPIO &pcfg_pull_none>; // sch
 		};
 	};
 
