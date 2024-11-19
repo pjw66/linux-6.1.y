@@ -74,10 +74,6 @@
 		};
 	};
 
-    test-power {
-		status = "okay";
-	};
-
     clkin_gmac: external-gmac-clock {
 		compatible = "fixed-clock";
 		clock-frequency = <125000000>;
@@ -188,6 +184,10 @@
 			linux,code = <KEY_VOLUMEUP>;
 			press-threshold-microvolt = <1750>;
 		};
+	};
+
+	test-power {
+		status = "okay";
 	};
 
     spdif_sound: spdif-sound {
@@ -346,7 +346,6 @@
 	status = "okay";
 };
 
-
 &io_domains {
 	status = "okay";
 	rockchip,grf = <&grf>;
@@ -392,7 +391,7 @@
 };
 
 &usbdrd_dwc3_0 {
-	dr_mode = "otg";
+	dr_mode = "host";
 	status = "okay";
 };
 
@@ -671,18 +670,18 @@
 	};
 };
 
-&cdn_dp {
-	status = "okay";
-	extcon = <&fusb0>;
-};
+// &cdn_dp {
+// 	status = "okay";
+// 	extcon = <&fusb0>;
+// };
 
-&hdmi_in_vopl {
-	status = "disabled";
-};
+// &hdmi_in_vopl {
+// 	status = "disabled";
+// };
 
-&dp_in_vopb {
-	status = "disabled";
-};
+// &dp_in_vopb {
+// 	status = "disabled";
+// };
 
 // &route_hdmi {
 // 	status = "okay";
@@ -768,11 +767,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart0_xfer &uart0_cts &uart0_rts>;
 	status = "okay";
-};
-
-&uart1 {
-	pinctrl-0 = <&uart1_xfer>;
-	status = "disabled";
 };
 
 &uart2 {
